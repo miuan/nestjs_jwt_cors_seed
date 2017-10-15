@@ -5,7 +5,7 @@ import 'dotenv/config';
 import * as jwt from 'jsonwebtoken';
 import * as randomtoken from 'random-token';
 
-import {UsersService} from './users.service'
+import {UsersService, UserAlreadyExistError, UserPasswordToSimpleError} from './users.service'
 
 @Controller()
 export class AppController {
@@ -20,6 +20,23 @@ export class AppController {
 
 	}
 
+	@Post('/api/signup')
+	public async signup(@Body() body, @Res() res, @Next() next) {
+		try{
+			const loginInfo = await this.usersService.signup(body.email, body.password);
+			
+			res.json(loginInfo);
+		} catch (ex) {
+			if(ex instanceof UserAlreadyExistError) {
+				throw new HttpException(ex.message, HttpStatus.UNAUTHORIZED);
+			}
+
+			if(ex instanceof UserPasswordToSimpleError) {
+				throw new HttpException(ex.message, HttpStatus.UNAUTHORIZED);
+			}
+		}
+
+	}
 
 
 	@Post('/api/login')

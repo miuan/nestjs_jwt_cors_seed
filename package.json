@@ -1,0 +1,49 @@
+{
+  "name": "nestjs_jwt_cors_seed",
+  "version": "1.0.0",
+  "description": "NestJS + JWT + CORS SEED",
+  "repository": "git@github.com:miuan/nestjs_jwt_cors_seed.git",
+  "author": "Milan Medlik",
+  "license": "MIT",
+  "scripts": {
+    "start": "nodemon -w *.*.ts --exec ts-node ./src/main.ts",
+    "mongod": "& 'C:/Program Files/MongoDB/Server/3.4/bin/mongod.exe'",
+    "test": "mocha --compilers ts-node/register src/**/*.spec.ts",
+    "test:watch": "nodemon --watch './src/**/*.ts' --exec npm test"
+  },
+  "dependencies": {
+    "@nestjs/common": "^4.0.1",
+    "@nestjs/core": "^4.0.1",
+    "@nestjs/microservices": "^4.0.1",
+    "@nestjs/testing": "^4.0.1",
+    "@nestjs/websockets": "^4.0.1",
+    "@types/mocha": "^2.2.42",
+    "bcrypt-nodejs": "0.0.3",
+    "body-parser": "~1.17.1",
+    "connect-flash": "^0.1.1",
+    "cookie-parser": "~1.4.3",
+    "cors": "^2.8.2",
+    "crypto": "^1.0.1",
+    "dotenv": "^4.0.0",
+    "express-session": "^1.11.3",
+    "jest": "^21.2.1",
+    "jsonwebtoken": "^8.0.0",
+    "mocha": "^3.5.0",
+    "mongoose": "^4.11.7",
+    "passport": "^0.3.0",
+    "passport-auth0": "^0.6.0",
+    "passport-facebook": "^2.1.1",
+    "passport-local": "^1.0.0",
+    "random-token": "0.0.8",
+    "reflect-metadata": "^0.1.10",
+    "rxjs": "^5.4.0",
+    "ts-node": "^3.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^7.0.18",
+    "chai": "^4.1.2",
+    "nodemon": "^1.11.0",
+    "ts-node": "^3.0.2",
+    "typescript": "^2.2.2"
+  }
+}

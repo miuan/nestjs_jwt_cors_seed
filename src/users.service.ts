@@ -12,6 +12,26 @@ export interface LoginInfo {
     user: any;
 }
 
+export class UserAlreadyExistError extends Error {
+    constructor(public message: string){
+        super(message);
+    }
+
+    public getMessage() : string{
+        return this.message;
+    }
+}
+
+export class UserPasswordToSimpleError extends Error {
+    constructor(public message: string){
+        super(message);
+    }
+
+    public getMessage() : string{
+        return this.message;
+    }
+}
+
 @Component()
 export class UsersService {
     private users = [
@@ -47,7 +67,6 @@ export class UsersService {
      * @param email 
      * @param password 
      * @param options 
-     * @param callback 
      */
     async login (email: string, password: string, options?: any) : Promise<LoginInfo> {
         
@@ -58,6 +77,8 @@ export class UsersService {
         let valid = false;
         
         const user = await this.getUserByEmail(email);
+
+       
         
         if(!user){
             // user not found
@@ -66,28 +87,72 @@ export class UsersService {
 
 
         const loginInfo:LoginInfo = await new Promise<LoginInfo>((resolve, reject)=>{
-            user.validPassword(password, (error, valid)=>{
+
+            
+
+            user.validPassword(password, async (error, valid)=>{
                 
                 if(!valid){
                     // invalid password for user
                     return reject('invalid password');
                 }
 
-
                 let tokenJWT = user.generateTokenJWT(options.jwt);
                 user.generateRefreshToken(options.refreshToken);
 
-                user.save(()=>{
-                    resolve({user, token: tokenJWT, refreshToken: user.refreshToken});
-                });
+                await user.save();
+
+                const li : LoginInfo = {user, token: tokenJWT, refreshToken: user.refreshToken};
+
+                resolve(li);
             
             });
         });
         
         return loginInfo;
-        
     }
 
+    /**
+     * 
+     * @param email 
+     * @param password 
+     */
+    async signup(email, password) : Promise<LoginInfo> {
+
+        const testIfExist = await this.getUserByEmail(email);
+
+        if(testIfExist){
+            // DEBUG:
+            // console.log('testIfExists', testIfExist);
+
+            throw new UserAlreadyExistError(`User with email '${email}' already exists`);
+        }
+
+        if(password.length < 5){
+            throw new UserPasswordToSimpleError('password is too short');
+        }
+
+        const upperCase= new RegExp('[^A-Z]');
+        const lowerCase= new RegExp('[^a-z]');
+        const numbers = new RegExp('[^0-9]');
+        
+        if(!password.match(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{5,}$/)){
+            throw new UserPasswordToSimpleError('password must contain upperCase lowerCase and at least one number');
+        }
+
+
+        const newUser = new Users();
+        
+        // set the user's local credentials
+        newUser.local.email    = email;
+        newUser.local.password = newUser.generateHash(password);
+        
+        await newUser.save();
+
+        const loginInfo = await this.login(email, password);
+
+        return loginInfo;
+    }
     
 
 

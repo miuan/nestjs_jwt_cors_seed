@@ -1,5 +1,5 @@
 import {Test} from '@nestjs/testing';
-import { UsersService } from './users.service';
+import { UsersService, UserAlreadyExistError, UserPasswordToSimpleError } from './users.service';
 import * as mongoose from 'mongoose';
 import {Users} from './models/Users';
 import {expect} from 'chai';
@@ -244,5 +244,47 @@ describe('UserService', () => {
             
         
     }) 
+
+    it('signup new user and retrieve login info (tokens)', async () => {
+        const loginInfo = await usersService.signup('karel@seznam.cz', 'Kare234');
+
+        expect(loginInfo).to.have.property('refreshToken');
+        expect(loginInfo).to.have.property('token');
+
+    })
+
+    it('signup new user with already taken email', async () => {
+        try {
+            const loginInfo = await usersService.signup('karel123@seznam.cz', 'Karel123');
+            const loginInfo2 = await usersService.signup('karel123@seznam.cz', 'Karel123');
+
+            // this should not be execute
+            expect(false).to.be.true;
+        } catch ( ex ){
+            expect(ex instanceof UserAlreadyExistError).to.be.true;
+        }
+    })
+
+    it('signup with short password should not be accepted', async () => {
+        try {
+            const loginInfo = await usersService.signup('karel1234@seznam.cz', 'ka');
+            
+            // this should not be execute
+            expect(loginInfo).to.be.false;
+        } catch ( ex ){
+            expect(ex instanceof UserPasswordToSimpleError).to.be.true;
+        }
+    })
+
+    it('signup with simple password should not be accepted', async () => {
+        try {
+            const loginInfo = await usersService.signup('karel1234@seznam.cz', 'simplepass');
+            
+            // this should not be execute
+            expect(loginInfo).to.be.false;
+        } catch ( ex ){
+            expect(ex instanceof UserPasswordToSimpleError).to.be.true;
+        }
+    })
 
 });
