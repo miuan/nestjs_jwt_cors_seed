@@ -8,7 +8,7 @@ import * as randomtoken from 'random-token';
 import {UsersService, UserAlreadyExistError, UserPasswordToSimpleError} from './users.service'
 
 @Controller()
-export class AppController {
+export class UsersController {
 
 	public env = {
 	       AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID,
@@ -49,6 +49,12 @@ export class AppController {
 		}
 
 		res.json(loginInfo);
+	}
+
+
+	@Get('/api/user')
+	public async user(@Req() req, @Res() res){
+		res.json(req.user);
 	}
 
 }

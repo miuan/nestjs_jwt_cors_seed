@@ -7,11 +7,10 @@ import * as randomtoken from 'random-token';
 
 // define the schema for our user model
 const userSchema = mongoose.Schema({
+    
+    email        : String,
+    password     : String,
 
-    local            : {
-        email        : String,
-        password     : String,
-    },
     facebook         : {
         id           : String,
         token        : String,
@@ -46,22 +45,22 @@ userSchema.methods.generateHash = function(password) {
 userSchema.methods.validPassword = async function(password: string, callback) {
         
     // password is in this user-object know
-    if(this.local.password){
-        let valid = bcrypt.compareSync(password, this.local.password);
+    if(this.password){
+        let valid = bcrypt.compareSync(password, this.password);
         return callback(null, valid);
     }
 
     // find password for this user-object
     // and test if is valid
     Users.findById(this.id)
-            .select('local.password')
+            .select('password')
             .exec((error, passwordForUser)=>{
                 
                 if(error){
                     return callback(error);
                 }
 
-                let valid = bcrypt.compareSync(password, passwordForUser.local.password);
+                let valid = bcrypt.compareSync(password, passwordForUser.password);
                 callback(null, valid);
             });
         
@@ -77,7 +76,7 @@ userSchema.methods.generateTokenJWT = function(options?) {
     }
 
     let tokenUser = {
-        email: this.local.email,
+        email: this.email,
         id: this.id
     }
 

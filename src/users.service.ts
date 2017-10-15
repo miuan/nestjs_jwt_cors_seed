@@ -43,7 +43,7 @@ export class UsersService {
     getAllUsers() {
         let p = new Promise((resolve, reject)=>{
             Users.find({})
-                .select(['-local.password','-refreshToken'])
+                .select(['-password','-refreshToken'])
                 .exec((e,u)=>{
                     resolve(u);
                 })
@@ -55,8 +55,8 @@ export class UsersService {
 
     async getUserByEmail(email: string) {
         
-        const user = await Users.findOne({'local.email': email})
-                .select(['-local.password', '-refreshToken', '-refreshTokenExpiresIn', '-refreshTokenCreatedIn'])
+        const user = await Users.findOne({'email': email})
+                .select(['-password', '-refreshToken', '-refreshTokenExpiresIn', '-refreshTokenCreatedIn'])
                 .exec()
 
         return user;
@@ -131,11 +131,10 @@ export class UsersService {
         if(password.length < 5){
             throw new UserPasswordToSimpleError('password is too short');
         }
-
-        const upperCase= new RegExp('[^A-Z]');
-        const lowerCase= new RegExp('[^a-z]');
-        const numbers = new RegExp('[^0-9]');
         
+        //
+        // https://stackoverflow.com/questions/14850553/javascript-regex-for-password-containing-at-least-8-characters-1-number-1-uppe
+        //
         if(!password.match(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{5,}$/)){
             throw new UserPasswordToSimpleError('password must contain upperCase lowerCase and at least one number');
         }
@@ -144,8 +143,8 @@ export class UsersService {
         const newUser = new Users();
         
         // set the user's local credentials
-        newUser.local.email    = email;
-        newUser.local.password = newUser.generateHash(password);
+        newUser.email    = email;
+        newUser.password = newUser.generateHash(password);
         
         await newUser.save();
 
@@ -189,7 +188,7 @@ export class UsersService {
         // find password for this user-object
         // and test if is valid
         Users.findById(decoded.id)
-        .select(['local.email', 'refreshToken', 'refreshTokenExpiresIn', 'refreshTokenCreatedIn'])
+        .select(['email', 'refreshToken', 'refreshTokenExpiresIn', 'refreshTokenCreatedIn'])
         .exec((error, user)=>{
             
             if(error){

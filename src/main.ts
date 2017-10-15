@@ -7,7 +7,6 @@ import * as cors from 'cors';
 import * as session from 'express-session';
 import * as passport from 'passport';
 import { ApplicationModule } from './app.module';
-import { PassportService } from './passport.service';
 import * as flash from 'connect-flash';
 
 import * as mongoose from 'mongoose';
@@ -18,6 +17,10 @@ const corsConfig = {
 }
 
 const PORT = process.env.PORT || 3000;
+const DB_NAME = process.env.DB_NAME || 'nestjs-jwt-cors-seed';
+const DB_HOST = process.env.DB_HOST || 'localhost';
+const DB_USER = process.env.DB_USER || '';
+const DB_PASS = process.env.DB_PASS || '';
 
 async function bootstrap() {
   const app = await NestFactory.create(ApplicationModule);
@@ -36,5 +39,5 @@ async function bootstrap() {
   console.log(`app listen on port ${PORT}`);
 }
 
-mongoose.connect('mongodb://localhost/g4t');
+mongoose.connect(`mongodb://${DB_USER}:${DB_PASS}@${DB_HOST}/${DB_NAME}`);
 bootstrap();

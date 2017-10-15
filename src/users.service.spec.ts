@@ -20,8 +20,8 @@ describe('UserService', () => {
                 var newUser            = new Users();
 
                 // set the user's local credentials
-                newUser.local.email    = 'ahoj1@seznam.cz';
-                newUser.local.password = newUser.generateHash('b123456');
+                newUser.email    = 'ahoj1@seznam.cz';
+                newUser.password = newUser.generateHash('b123456');
                 newUser.save(() => done());
                 
             });
@@ -51,10 +51,14 @@ describe('UserService', () => {
 
 
         let users = await usersService.getAllUsers();
+
+        
+        console.log('users', users);
+
         expect(users).to.be.an('array');
         expect(users).to.have.lengthOf(1);
-        expect(users).to.not.have.property('password');
-        console.log(users);
+        expect(users[0].password).to.be.undefined;
+        
     })
 
     it('find one user by email `ahoj1@seznam.cz`', async ()=>{
@@ -62,9 +66,8 @@ describe('UserService', () => {
         const user = await usersService.getUserByEmail('ahoj1@seznam.cz');
 
         expect(user).to.be.an('object');
-        expect(user).to.have.property('local');
-        expect(user.local).to.have.property('email');
-        expect(user.local.email).to.be.equal('ahoj1@seznam.cz');
+        expect(user).to.have.property('email');
+        expect(user.email).to.be.equal('ahoj1@seznam.cz');
         
     })
 
@@ -73,10 +76,10 @@ describe('UserService', () => {
        
         const user = await usersService.getUserByEmail('ahoj1@seznam.cz');
 
+
         expect(user).to.be.an('object');
-        expect(user).to.have.property('local');
-        expect(user.local).to.have.property('email');
-        expect(user.local.email).to.be.equal('ahoj1@seznam.cz');
+        expect(user).to.have.property('email');
+        expect(user.email).to.be.equal('ahoj1@seznam.cz');
 
         await new Promise((resolve, reject)=>{
             user.validPassword('b123456', (error, valid)=>{
@@ -90,9 +93,8 @@ describe('UserService', () => {
         const user = await usersService.getUserByEmail('ahoj1@seznam.cz');
 
         expect(user).to.be.an('object');
-        expect(user).to.have.property('local');
-        expect(user.local).to.have.property('email');
-        expect(user.local.email).to.be.equal('ahoj1@seznam.cz');
+        expect(user).to.have.property('email');
+        expect(user.email).to.be.equal('ahoj1@seznam.cz');
 
         await new Promise((resolve, reject) => {
             user.validPassword('blablabla', (error, valid)=>{

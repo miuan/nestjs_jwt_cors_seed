@@ -1,9 +1,9 @@
 import { Module, MiddlewaresConsumer, RequestMethod } from '@nestjs/common';
-import { EnsureLoggedIn } from './app.middleware';
-import { AppController } from './users.controller';
+import { JWTLoggedIn } from './jwt.middleware';
+import { UsersController } from './users.controller';
 import { UsersService } from './users.service'
 @Module({
-	controllers: [ AppController ],
+	controllers: [ UsersController ],
 	components: [ UsersService ]
 })
 
@@ -11,10 +11,17 @@ export class ApplicationModule {
 
   configure(consumer: MiddlewaresConsumer) {
 		consumer
-		.apply(EnsureLoggedIn)
-		.forRoutes({
-	        path: 'user',
-	        method: RequestMethod.ALL
-		})
+			.apply(JWTLoggedIn)
+			.forRoutes({
+				path: '/api/user',
+				method: RequestMethod.ALL
+			})
+		
+		// consumer
+			// .apply(JWTLoggedIn)
+			// .forRoutes({
+			// 	path: '/api/your-briliant-api/*',
+			// 	method: RequestMethod.ALL
+			// })
 	}
 }
