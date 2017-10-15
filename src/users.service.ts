@@ -166,17 +166,18 @@ export class UsersService {
         return decoded; 
     }
 
-    tokenRefresh(token, refreshToken, options, callback?){
+    /**
+     * 
+     * @param token 
+     * @param refreshToken 
+     * @param options 
+     */
+    async tokenRefresh(token, refreshToken, options?) : Promise<LoginInfo>{
 
         if(!token) {
             throw 'token missing';
         }
 
-        // options is optional parameter
-		if(!callback){
-			callback = options;
-			options = null;
-        }
         
         if(!options){
             options = {}
@@ -184,27 +185,15 @@ export class UsersService {
 
         let decoded = jwt.decode(token, process.env.JWT_TOKEN_SECRET || 'demosecret');
         
-        
-        // find password for this user-object
-        // and test if is valid
-        Users.findById(decoded.id)
-        .select(['email', 'refreshToken', 'refreshTokenExpiresIn', 'refreshTokenCreatedIn'])
-        .exec((error, user)=>{
-            
-            if(error){
-                console.log('return callback(error)', error)
-                return callback(error);
-            }
+        try {
+            // find password for this user-object
+            // and test if is valid
+            const user = await Users.findById(decoded.id)
+                .select(['email', 'refreshToken', 'refreshTokenExpiresIn', 'refreshTokenCreatedIn'])
+                .exec();
 
-            let refreshTokenValid;
-
-            try {
-                refreshTokenValid = user.validRefreshToken(refreshToken);
-            } catch (ex) {
-                return callback(ex);
-            }
+            let refreshTokenValid = user.validRefreshToken(refreshToken);
            
-
             // create new refresh token
             if(refreshTokenValid){
                 
@@ -213,16 +202,18 @@ export class UsersService {
                 //console.log(' user.generateRefreshToken #1', user.refreshToken, refreshToken)
                 user.generateRefreshToken(options.refreshToken);
                 //console.log(' user.generateRefreshToken #2', user.refreshToken, refreshToken)
-                user.save((se, savedUser)=>{
+                const savedUser = await user.save();
                     //console.log(' user.generateRefreshToken #3', savedUser.refreshToken, refreshToken)
-                    callback(null, {user, token: tokenJWT, refreshToken: savedUser.refreshToken});
-                });
+                 
+                return {user, token: tokenJWT, refreshToken: savedUser.refreshToken};
+                
             } else {
-                callback(null, refreshTokenValid);
+                throw 'refresh token is already expired'
             }
-
-            
-        });
+        } catch (ex) {
+            throw ex;
+        }
+        
 
     }
 

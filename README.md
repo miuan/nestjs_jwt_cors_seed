@@ -114,7 +114,7 @@ curl -X GET \
 ```
 ### To add more endpoints to on JWT secure
 
-You can find in `app.module.ts` there is configuring middlewares and controllers
+You can find in `app.module.ts` there is configuring [middlewares](https://kamilmysliwiec.gitbooks.io/nest/content/quick-start/middlewares.html) and [controllers](https://kamilmysliwiec.gitbooks.io/nest/content/quick-start/modules.html) of NestJS
 
 ```TypeScript
 export class ApplicationModule {
@@ -136,6 +136,31 @@ export class ApplicationModule {
 	}
 }
 
+```
+
+## refresh token ( /api/refreshtoken )
+
+```cUrl
+curl -X POST \
+  http://localhost:3000/api/refreshtoken \
+  -H 'authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1pbGFuLm1lZGxpazRAZ21haWwuY29tIiwiaWQiOiI1OWUzNTk1NzBlNDA5ODNkZDA3ZTEwYmUiLCJpYXQiOjE1MDgwNzE3NjcsImV4cCI6MTUwODE1ODE2N30.l_zZTjPfJV4ZCc977PIQGRsiUPUDZ36o8axiBY2jLqQ' \
+  -H 'content-type: application/json' \
+  -d '{ "refreshToken":"wl5bds3rfw209iovsoic0o0a1nzhopxm" }'
+``` 
+
+response:
+
+```json
+{
+    "user": {
+        "_id": "59e359570e40983dd07e10be",
+        "email": "milan.medlik4@gmail.com",
+        "refreshToken": "rqgbjtoy9cjer892c2qol4uajlv9o5fb",
+        "refreshTokenExpiresIn": 1509300141911
+    },
+    "token": "eyJhbGciOiJIUz...",
+    "refreshToken": "rqgbjtoy9cjer892c2qol4uajlv9o5fb"
+}
 ```
 
 

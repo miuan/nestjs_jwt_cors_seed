@@ -169,7 +169,7 @@ describe('UserService', () => {
             // 
             // wait two milliseconds
             //
-            setTimeout(()=>{
+            setTimeout(async ()=>{
                 
                 let expired = null;
                 let decoded = false;
@@ -187,55 +187,62 @@ describe('UserService', () => {
                 expect(expired).have.a.property('name');
                 expect(expired.name).is.equal('TokenExpiredError');
 
-                usersService.tokenRefresh(loginInfo.token, loginInfo.refreshToken, (err, newTokens)=>{
-                    //console.log('newTokens', newTokens);
-                    expect(err).to.be.null;
+                const newTokens = await usersService.tokenRefresh(loginInfo.token, loginInfo.refreshToken);
+                    
+                
+                
+                //
+                // old token and new tokens, can't be the same
+                //
+                expect(loginInfo.token).not.to.be.equal(newTokens.token);
+                expect(loginInfo.refreshToken).not.to.be.equal(newTokens.refreshToken);
 
-                    //
-                    // old token and new tokens, can't be the same
-                    //
-                    expect(loginInfo.token).not.to.be.equal(newTokens.token);
-                    expect(loginInfo.refreshToken).not.to.be.equal(newTokens.refreshToken);
+                //
+                // test new tokens could be verified as OK
+                //
+                try {
+                    expired = null;
+                    decoded = null;
+                    decoded = usersService.tokenVerify(newTokens.token);
+                } catch (err) {
+                    expired = err;
+                }
 
-                    //
-                    // test new tokens could be verified as OK
-                    //
-                    try {
-                        expired = null;
-                        decoded = null;
-                        decoded = usersService.tokenVerify(newTokens.token);
-                    } catch (err) {
-                        expired = err;
-                    }
-
-                    //console.log('new decoded', decoded);
-                    expect(expired).is.null;
-                    expect(decoded).not.to.be.null;
-                    expect(decoded).is.a('object');
-                    expect(decoded).have.a.property('email');
-                    expect(decoded).have.a.property('id');
-
+                //console.log('new decoded', decoded);
+                expect(expired).is.null;
+                expect(decoded).not.to.be.null;
+                expect(decoded).is.a('object');
+                expect(decoded).have.a.property('email');
+                expect(decoded).have.a.property('id');
+                
+                // DEBUG:
+                // console.log('---ok 1')
 
                     
-                    usersService.tokenRefresh(newTokens.token, newTokens.refreshToken, (err, newNewTokens)=>{
+                const newNewTokens = await usersService.tokenRefresh(newTokens.token, newTokens.refreshToken);
                         
-                        //console.log('newNewTokens', err, newNewTokens);
-                        expect(newNewTokens).not.to.be.null;
+                //console.log('newNewTokens', err, newNewTokens);
+                expect(newNewTokens).not.to.be.null;
 
-                        //
-                        // we should get error, because old token is not used anymore
-                        //
-                        usersService.tokenRefresh(loginInfo.token, loginInfo.refreshToken, (err, newNewTokens2)=>{
-                            
-                            expect(err).not.to.be.null;
-                            expect(newNewTokens2).to.be.undefined;
-                            //console.log('newNewTokens @2', err, newNewTokens2);
+                //
+                // we should get error, because old token is not used anymore
+                //
+                try {
+                    const newNewTokens2 = await usersService.tokenRefresh(loginInfo.token, loginInfo.refreshToken);
+                    
+                    // this code should not be done
+                    expect(true).to.be.false;
+                    expect(newNewTokens2).to.be.undefined;
+                } catch(ex2) {
+                    expect(ex2).not.to.be.null;
+                    
+                    // DEBUG:
+                    // console.log('---ok 2')
+                }
+                
+                //console.log('newNewTokens @2', err, newNewTokens2);
 
-                            resolve();
-                        });
-                    });
-                })
-
+                resolve();
 
             }, 2);
         })

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Req, Res, Next, HttpStatus, Body,   } from '@nestjs/common';
+import { Controller, Get, Post, Req, Res, Next, HttpStatus, Body, Headers   } from '@nestjs/common';
 import { HttpException } from '@nestjs/core';
 
 import 'dotenv/config';
@@ -55,6 +55,24 @@ export class UsersController {
 	@Get('/api/user')
 	public async user(@Req() req, @Res() res){
 		res.json(req.user);
+	}
+
+	@Post('/api/refreshtoken')
+	public async newtoken(@Body() body, @Headers() headers, @Res() res){
+
+		const authorization = headers['authorization'];
+        const Bearer = 'Bearer ';
+
+        // remove Bearer string or keep as is it
+		const jwtToken = authorization.indexOf(Bearer) == 0 ? authorization.substr(Bearer.length) : authorization;
+		try {
+			const loginInfo = await this.usersService.tokenRefresh(jwtToken, body.refreshToken);
+			res.json(loginInfo);
+		} catch (ex){
+			throw new HttpException(ex, HttpStatus.UNAUTHORIZED);
+		}
+		
+		
 	}
 
 }
