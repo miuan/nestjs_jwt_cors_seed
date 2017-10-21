@@ -5,7 +5,8 @@ import 'dotenv/config';
 import * as jwt from 'jsonwebtoken';
 import * as randomtoken from 'random-token';
 
-import {UsersService, UserAlreadyExistError, UserPasswordToSimpleError} from './users.service'
+import  {UserAlreadyExistError, UserPasswordToSimpleError} from './lib/users.lib';
+import {UsersService} from './users.service';
 
 @Controller()
 export class UsersController {

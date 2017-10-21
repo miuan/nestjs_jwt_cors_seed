@@ -1,8 +1,8 @@
 
-# Seed NestJS + JWT + CORS 
+# Seed with NestJS + JWT + CORS 
 This is the seed project you need to use if you're going to create regular [NestJS Framework](http://nestjs.com) web application with JWT authorization.
 
-JWT also containing refresh tokens for refresh 
+This seed already contain simple endpoins for create new user, login user, refresh token, etc, so you can start developing just features of your awesome project
 
 # This version works only with Mongosee (MongoDB)
 
@@ -28,6 +28,13 @@ Now, run `npm install` to install the dependencies.
 Just run `npm start` and try calling [http://localhost:3000/](http://localhost:3000/)
 
 # API
+
+this seed have already implemented simple API endpoins for start development and don't lose time with singup/login
+
+- POST /api/signup (create new user)
+- POST /api/login (login with existing user)
+- GET /api/user (information about loged user)
+- POST /api/refreshtoken (refresh jwt token by refresh-token)
 
 ## sign up (/api/signup)
 
