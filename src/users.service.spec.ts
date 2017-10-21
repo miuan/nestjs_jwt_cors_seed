@@ -323,6 +323,23 @@ describe('UserService', () => {
                 expect(ex instanceof UserPasswordToSimpleError).to.be.true;
             }
         })
+
+        it('password with special symbols ".#_!" should BE accepted', async () => {
+            let loginInfo = null;
+            let loginInfoException = null;
+            
+            try {
+                loginInfo = await usersService.signup('karel12345@seznam.cz', 'Karel._#!123,@');
+                
+                
+            } catch ( ex ){
+                loginInfoException = ex;
+            }
+
+            expect(loginInfoException).to.be.null;
+            expect(loginInfo).not.to.be.null;
+            
+        })
     })
 
     

@@ -229,9 +229,22 @@ export const signup = async (email: String, password: String) : Promise<LoginInf
     
     //
     // https://stackoverflow.com/questions/14850553/javascript-regex-for-password-containing-at-least-8-characters-1-number-1-uppe
+    // https://stackoverflow.com/questions/7844359/password-regex-with-min-6-chars-at-least-one-letter-and-one-number-and-may-cont?noredirect=1&lq=1
     //
-    if(!password.match(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{5,}$/)){
-        throw new UserPasswordToSimpleError('password must contain upperCase lowerCase and at least one number');
+    if(!password.match(/\d/)){
+        throw new UserPasswordToSimpleError('password must contain at least one number');
+    }
+
+    if(!password.match(/[a-z]/)){
+        throw new UserPasswordToSimpleError('password must contain at least one letter lower case');
+    }
+
+    if(!password.match(/[A-Z]/)){
+        throw new UserPasswordToSimpleError('password must contain at least one letter upper case');
+    }
+
+    if(password.match(/[^a-zA-Z0-9\!\@\#\$\%\^\&\*\(\)\_\+\.\,\;\:]/)){
+        throw new UserPasswordToSimpleError('password have not allowed character, supported characters:!@#$%*\_+.,;:');
     }
 
 
