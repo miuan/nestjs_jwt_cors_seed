@@ -1,23 +1,23 @@
-import {Test} from '@nestjs/testing';
-
-import { UsersService } from './users.service';
 import * as mongoose from 'mongoose';
-import {Users} from './models/Users';
+import {Users} from '../models/Users';
 import {expect} from 'chai';
 
 import {
     LoginInfo,
+    getAllUsers,
     generateHash,
     tokenVerify,
     validPassword, 
     UserAlreadyExistError, 
-    UserPasswordToSimpleError
-} from './lib/users.lib'
+    UserPasswordToSimpleError,
+    getUserByEmail,
+    login,
+    signup,
+    tokenRefresh
+} from './users.lib'
 
-describe('UserService', () => {
-    
+describe('UserLib', () => {
 
-    let usersService : UsersService;
 
     before((done)=>{
         
@@ -45,22 +45,11 @@ describe('UserService', () => {
         });
     })
 
-    beforeEach(async () => {
-        const module1 = await Test.createTestingModule({
-            components: [
-              UsersService
-            ]
-          }).compile();
-
-        
-        usersService = module1.get<UsersService>(UsersService);
-    });
-
 
     describe('basic', () => {
 
         it('all users not contain password', async ()=>{
-            let users = await usersService.getAllUsers();
+            let users = await getAllUsers();
     
             // DEBUG:        
             // console.log('users', users);
@@ -73,12 +62,39 @@ describe('UserService', () => {
     
         it('find one user by email `ahoj1@seznam.cz`', async ()=>{
             
-            const user = await usersService.getUserByEmail('ahoj1@seznam.cz');
+            const user = await getUserByEmail('ahoj1@seznam.cz');
     
             expect(user).to.be.an('object');
             expect(user).to.have.property('email');
             expect(user.email).to.be.equal('ahoj1@seznam.cz');
             
+        })
+    
+    
+        it('valid password `ahoj1@seznam.cz`', async ()=>{
+            
+            const user = await getUserByEmail('ahoj1@seznam.cz');
+    
+    
+            expect(user).to.be.an('object');
+            expect(user).to.have.property('email');
+            expect(user.email).to.be.equal('ahoj1@seznam.cz');
+    
+            let valid = await validPassword(user, 'b123456');
+
+            expect(valid).to.be.true;
+        }) 
+    
+        it('invalid password `ahoj1@seznam.cz`', async () =>{
+            const user = await getUserByEmail('ahoj1@seznam.cz');
+    
+            expect(user).to.be.an('object');
+            expect(user).to.have.property('email');
+            expect(user.email).to.be.equal('ahoj1@seznam.cz');
+           
+            let valid = await validPassword(user, 'blablabla');
+            
+            expect(valid).to.be.false;
         })
     })
     
@@ -86,7 +102,7 @@ describe('UserService', () => {
     describe('login', () => {
 
         it('user `ahoj1@seznam.cz` and retrieve token, refreshToken', async () => {
-            const loginInfo = await usersService.login('ahoj1@seznam.cz', 'b123456');
+            const loginInfo = await login('ahoj1@seznam.cz', 'b123456');
         
             expect(loginInfo).to.be.a('object');
             expect(loginInfo).to.have.property('user');
@@ -96,7 +112,7 @@ describe('UserService', () => {
         
     
         it('user `ahoj1@seznam.cz` and check the retrieved tokens', async () => {
-            const loginInfo = await usersService.login('ahoj1@seznam.cz', 'b123456');
+            const loginInfo = await login('ahoj1@seznam.cz', 'b123456');
     
             //console.log('tokenValid',loginInfo, loginInfo);
     
@@ -139,7 +155,7 @@ describe('UserService', () => {
             //
             // create token what will expire after one 1ms
             //
-            const loginInfo = await usersService.login('ahoj1@seznam.cz', 'b123456', {jwt:{expiresIn:'1ms'}});
+            const loginInfo = await login('ahoj1@seznam.cz', 'b123456', {jwt:{expiresIn:'1ms'}});
                 
             expect(loginInfo).to.have.property('refreshToken');
             expect(loginInfo).to.have.property('token');
@@ -174,7 +190,7 @@ describe('UserService', () => {
                     let newTokensException = null;
                     
                     try {
-                        newTokens = await usersService.tokenRefresh(loginInfo.token, loginInfo.refreshToken);
+                        newTokens = await tokenRefresh(loginInfo.token, loginInfo.refreshToken);
                     } catch (ex) {
                         newTokensException = ex;
                     }
@@ -210,7 +226,7 @@ describe('UserService', () => {
                     // console.log('#2')
     
                         
-                    const newNewTokens = await usersService.tokenRefresh(newTokens.token, newTokens.refreshToken);
+                    const newNewTokens = await tokenRefresh(newTokens.token, newTokens.refreshToken);
                             
                     //console.log('newNewTokens', err, newNewTokens);
                     expect(newNewTokens).not.to.be.null;
@@ -219,7 +235,7 @@ describe('UserService', () => {
                     // we should get error, because old token is not used anymore
                     //
                     try {
-                        const newNewTokens2 = await usersService.tokenRefresh(loginInfo.token, loginInfo.refreshToken);
+                        const newNewTokens2 = await tokenRefresh(loginInfo.token, loginInfo.refreshToken);
                         
                         // this code should not be done
                         expect(true).to.be.false;
@@ -248,7 +264,7 @@ describe('UserService', () => {
 
     describe('signup', ()=>{
         it('new user and retrieve login info (tokens)', async () => {
-            const loginInfo = await usersService.signup('karel@seznam.cz', 'Kare234');
+            const loginInfo = await signup('karel@seznam.cz', 'Kare234');
     
             expect(loginInfo).to.have.property('refreshToken');
             expect(loginInfo).to.have.property('token');
@@ -257,8 +273,8 @@ describe('UserService', () => {
     
         it('new user with already taken email', async () => {
             try {
-                const loginInfo = await usersService.signup('karel123@seznam.cz', 'Karel123');
-                const loginInfo2 = await usersService.signup('karel123@seznam.cz', 'Karel123');
+                const loginInfo = await signup('karel123@seznam.cz', 'Karel123');
+                const loginInfo2 = await signup('karel123@seznam.cz', 'Karel123');
     
                 // this should not be execute
                 expect(false).to.be.true;
@@ -269,7 +285,7 @@ describe('UserService', () => {
     
         it('with short password should not be accepted', async () => {
             try {
-                const loginInfo = await usersService.signup('karel1234@seznam.cz', 'ka');
+                const loginInfo = await signup('karel1234@seznam.cz', 'ka');
                 
                 // this should not be execute
                 expect(loginInfo).to.be.false;
@@ -280,7 +296,7 @@ describe('UserService', () => {
     
         it('with simple password should not be accepted', async () => {
             try {
-                const loginInfo = await usersService.signup('karel1234@seznam.cz', 'simplepass');
+                const loginInfo = await signup('karel1234@seznam.cz', 'simplepass');
                 
                 // this should not be execute
                 expect(loginInfo).to.be.false;
@@ -294,7 +310,7 @@ describe('UserService', () => {
             let loginInfoException = null;
             
             try {
-                loginInfo = await usersService.signup('karel12345@seznam.cz', 'Karel._#!123,@');
+                loginInfo = await signup('karel12345@seznam.cz', 'Karel._#!123,@');
                 
                 
             } catch ( ex ){

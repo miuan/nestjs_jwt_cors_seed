@@ -66,28 +66,17 @@ export const getUserByEmail = async (email: string): Promise<IUser> => {
  * @param password 
  * @param callback 
  */
-export const validPassword = (user: IUser, password: string, callback) => {
-        
-    // password is in this user-object know
-    if(this.password){
-        let valid = bcrypt.compareSync(password, this.password);
-        return callback(null, valid);
-    }
+export const validPassword = async (user: IUser, password: string) => {
 
     // find password for this user-object
     // and test if is valid
-    Users.findById(user.id)
+    const passwordForUser = await Users.findById(user.id)
             .select('password')
-            .exec((error, passwordForUser)=>{
-                
-                if(error){
-                    return callback(error);
-                }
-
-                let valid = bcrypt.compareSync(password, passwordForUser.password);
-                callback(null, valid);
-            });
-        
+            .exec();
+    
+    const valid = bcrypt.compareSync(password, passwordForUser.password);  
+    
+    return valid;
 };
 
 /**
@@ -175,7 +164,7 @@ export const login = async (email: string, password: string, options?: any) : Pr
 
     let valid = false;
     
-    const user = await this.getUserByEmail(email);
+    let user = await this.getUserByEmail(email);
     
     if(!user){
         // user not found
@@ -183,26 +172,18 @@ export const login = async (email: string, password: string, options?: any) : Pr
     }
 
 
-    const loginInfo:LoginInfo = await new Promise<LoginInfo>((resolve, reject)=>{
-
-        validPassword(user, password, async (error, valid)=>{
+    valid = await validPassword(user, password);
             
-            if(!valid){
-                // invalid password for user
-                return reject('invalid password');
-            }
+    if(!valid) {
+        throw 'invalid password';
+    }
 
-            let tokenJWT = generateTokenJWT(user, options.jwt);
-            generateRefreshToken(user, options.refreshToken);
+    let tokenJWT = generateTokenJWT(user, options.jwt);
+    generateRefreshToken(user, options.refreshToken);
 
-            await user.save();
+    await user.save();
 
-            const li : LoginInfo = {user, token: tokenJWT, refreshToken: user.refreshToken};
-
-            resolve(li);
-        
-        });
-    });
+    const loginInfo : LoginInfo = {user, token: tokenJWT, refreshToken: user.refreshToken};
     
     return loginInfo;
 }
